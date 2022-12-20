@@ -1,25 +1,24 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DataController } from './data/data.controller';
-import { DataService } from './data/data.interface';
-import { DataModule } from './data/data.module';
-import { PostsModule } from './posts/posts.module';
+import { PostsController } from './posts/posts.controller';
 import { JwtModule } from '@nestjs/jwt'
-
-
-
+import { LoggerMiddleware } from './logger.middleware';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
-  imports: [DataModule, PostsModule,JwtModule.register({secret:"key"})],
-  controllers: [AppController, DataController],
-  providers: [AppService, DataService],
+  imports: [PostsModule,JwtModule.register({secret:"key"})],
+  controllers: [AppController],
+  providers: [AppService ],
 })
 
 export class AppModule implements NestModule { 
   configure(consumer: MiddlewareConsumer) {
       consumer
-      .apply()
-      .forRoutes();
+      .apply(LoggerMiddleware)
+      .exclude(
+        {path: 'posts/jwt', method: RequestMethod.POST}
+      )
+      .forRoutes(PostsController);
   }
  }
